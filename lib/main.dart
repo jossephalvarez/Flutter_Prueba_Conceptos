@@ -4,13 +4,29 @@ import 'package:flutter/material.dart';
 import 'package:app_poc/ui/pages/camera_page.dart';
 import 'package:app_poc/ui/pages/result_page.dart';
 import 'package:camera/camera.dart';
+import 'package:geolocator/geolocator.dart';
 
 List<CameraDescription> cameras;
+
+void getCurrentLocation() async {
+  Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high);
+  var lat = position.latitude;
+  var long = position.longitude;
+  print('${lat}- ${long}');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
-  print(cameras.length);
+  LocationPermission permission = await Geolocator.requestPermission();
+  Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high);
+  var lat = position.latitude;
+  var long = position.longitude;
+  print("${cameras.length} CAMERAS!");
+  print("$permission permission!");
+  print("'$lat- $long coords!");
   runApp(MyApp());
 }
 
