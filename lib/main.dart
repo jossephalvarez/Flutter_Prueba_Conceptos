@@ -1,7 +1,10 @@
+import 'dart:async';
+
 /// Flutter code sample for BottomNavigationBar
 
 import 'package:flutter/material.dart';
 import 'package:app_poc/ui/pages/camera_page.dart';
+import 'package:app_poc/ui/pages/webview_page.dart';
 import 'package:app_poc/ui/pages/result_page.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,16 +20,10 @@ void getCurrentLocation() async {
 }
 
 void main() async {
+  print('ON MAIN');
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
-  LocationPermission permission = await Geolocator.requestPermission();
-  Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high);
-  var lat = position.latitude;
-  var long = position.longitude;
   print("${cameras.length} CAMERAS!");
-  print("$permission permission!");
-  print("'$lat- $long coords!");
   runApp(MyApp());
 }
 
@@ -56,12 +53,18 @@ class MyStatefulWidget extends StatefulWidget {
 
 /// This is the private State class that goes with MyStatefulWidget.
 class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+  Position _position;
+  StreamSubscription<Position> _positionStream;
+
+  var lat = '';
+  var long = '';
+
   int _selectedIndex = 1;
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static const List<Widget> _widgetOptions = <Widget>[
     Text(
-      'Index 0: Location',
+      'YOUR LOCATION IS:',
       style: optionStyle,
     ),
     Text(
@@ -83,9 +86,10 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
       case 0:
         {
           print('....0');
-          setState(() {
-            _selectedIndex = index;
-          });
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WebviewPage()),
+          );
         }
         break;
 
@@ -117,23 +121,48 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   }
 
   @override
+  void initState() {
+    print('ON initState...');
+    super.initState();
+
+    // STREAM EXAMPLE
+    var locationOptions =
+        LocationOptions(accuracy: LocationAccuracy.high, distanceFilter: 10);
+    _positionStream =
+        Geolocator.getPositionStream().listen((Position position) {
+      setState(() {
+        print(position);
+        _position = position;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    print('ON DISPOSEEEE...');
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('FLUTTER POC APP'),
       ),
       body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+        child: Text(
+            "LOCATION ${_position?.latitude ?? '-'}, ${_position?.longitude ?? '-'}"),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.gps_fixed_outlined),
-            label: 'Location',
+            icon: Icon(Icons.remove_red_eye_outlined),
+            label: 'Web View',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: Icon(Icons.gps_fixed_outlined),
+            label: 'Location',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.camera_alt_outlined),
